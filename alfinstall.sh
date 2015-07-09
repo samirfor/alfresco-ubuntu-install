@@ -73,7 +73,7 @@ echogreen () {
 }
 cd /tmp
 if [ -d "alfrescoinstall" ]; then
-	rm -rf alfrescoinstall
+  rm -rf alfrescoinstall
 fi
 mkdir alfrescoinstall
 cd ./alfrescoinstall
@@ -95,23 +95,23 @@ echo
 URLERROR=0
 
 for REMOTE in $TOMCAT_DOWNLOAD $JDBCPOSTGRESURL/$JDBCPOSTGRES $JDBCMYSQLURL/$JDBCMYSQL \
-        $LIBREOFFICE $SWFTOOLS $ALFWARZIP $GOOGLEDOCSREPO $GOOGLEDOCSSHARE $SOLR4_WAR_DOWNLOAD $SOLR4_CONFIG_DOWNLOAD $SPP
+$LIBREOFFICE $SWFTOOLS $ALFWARZIP $GOOGLEDOCSREPO $GOOGLEDOCSSHARE $SOLR4_WAR_DOWNLOAD $SOLR4_CONFIG_DOWNLOAD $SPP
 
 do
-        wget --spider $REMOTE --no-check-certificate >& /dev/null
-        if [ $? != 0 ]
-        then
-                echored "In alfinstall.sh, please fix this URL: $REMOTE"
-                URLERROR=1
-        fi
+  wget --spider $REMOTE --no-check-certificate >& /dev/null
+  if [ $? != 0 ]
+    then
+    echored "In alfinstall.sh, please fix this URL: $REMOTE"
+    URLERROR=1
+  fi
 done
 
 if [ $URLERROR = 1 ]
-then
-    echo
-    echored "Please fix the above errors and rerun."
-    echo
-    exit
+  then
+  echo
+  echored "Please fix the above errors and rerun."
+  echo
+  exit
 fi
 
 echo
@@ -121,11 +121,11 @@ echoblue "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 sudo apt-get $APTVERBOSITY update;
 echo
 
-if [ "`which curl`" = "" ]; then
-echoblue "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-echo "You need to install curl. Curl is used for downloading components to install."
-echoblue "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-sudo apt-get $APTVERBOSITY install curl;
+if [ "`which axel`" = "" ]; then
+  echoblue "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+  echo "You need to install axel. Axel is used for downloading components to install."
+  echoblue "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+  sudo apt-get $APTVERBOSITY install axel;
 fi
 
 echo
@@ -183,7 +183,7 @@ read -e -p "Install Tomcat${ques} [y/n] " -i "n" installtomcat
 if [ "$installtomcat" = "y" ]; then
   echogreen "Installing Tomcat"
   echo "Downloading tomcat..."
-  curl -# -L -O $TOMCAT_DOWNLOAD
+  wget --content-disposition $TOMCAT_DOWNLOAD
   # Make sure install dir exists
   sudo mkdir -p $ALF_HOME
   echo "Extracting..."
@@ -193,10 +193,10 @@ if [ "$installtomcat" = "y" ]; then
   sudo rm -rf $CATALINA_HOME/webapps/*
   # Get Alfresco config
   echo "Downloading tomcat configuration files..."
-  sudo curl -# -o $CATALINA_HOME/conf/server.xml $BASE_DOWNLOAD/tomcat/server.xml
-  sudo curl -# -o $CATALINA_HOME/conf/catalina.properties $BASE_DOWNLOAD/tomcat/catalina.properties
-  sudo curl -# -o $CATALINA_HOME/conf/tomcat-users.xml $BASE_DOWNLOAD/tomcat/tomcat-users.xml
-  sudo curl -# -o /etc/init/alfresco.conf $BASE_DOWNLOAD/tomcat/alfresco.conf
+  sudo axel -an 4 -o $CATALINA_HOME/conf/server.xml $BASE_DOWNLOAD/tomcat/server.xml
+  sudo axel -an 4 -o $CATALINA_HOME/conf/catalina.properties $BASE_DOWNLOAD/tomcat/catalina.properties
+  sudo axel -an 4 -o $CATALINA_HOME/conf/tomcat-users.xml $BASE_DOWNLOAD/tomcat/tomcat-users.xml
+  sudo axel -an 4 -o /etc/init/alfresco.conf $BASE_DOWNLOAD/tomcat/alfresco.conf
   sudo sed -i "s/@@LOCALESUPPORT@@/$LOCALESUPPORT/g" /etc/init/alfresco.conf
   # Create /shared
   sudo mkdir -p $CATALINA_HOME/shared/classes/alfresco/extension
@@ -217,39 +217,39 @@ if [ "$installtomcat" = "y" ]; then
     SHARE_PORT=443
   fi
   read -e -p "Please enter the host name for Alfresco Repository server (fully qualified domain name)${ques} [$SHARE_HOSTNAME] " -i "$SHARE_HOSTNAME" REPO_HOSTNAME
-
+  
   # Add default alfresco-global.propertis
   ALFRESCO_GLOBAL_PROPERTIES=/tmp/alfrescoinstall/alfresco-global.properties
-  sudo curl -# -o $ALFRESCO_GLOBAL_PROPERTIES $BASE_DOWNLOAD/tomcat/alfresco-global.properties
+  sudo axel -an 4 -o $ALFRESCO_GLOBAL_PROPERTIES $BASE_DOWNLOAD/tomcat/alfresco-global.properties
   sed -i "s/@@ALFRESCO_SHARE_SERVER@@/$SHARE_HOSTNAME/g" $ALFRESCO_GLOBAL_PROPERTIES
   sed -i "s/@@ALFRESCO_SHARE_SERVER_PORT@@/$SHARE_PORT/g" $ALFRESCO_GLOBAL_PROPERTIES
   sed -i "s/@@ALFRESCO_SHARE_SERVER_PROTOCOL@@/$SHARE_PROTOCOL/g" $ALFRESCO_GLOBAL_PROPERTIES
   sed -i "s/@@ALFRESCO_REPO_SERVER@@/$REPO_HOSTNAME/g" $ALFRESCO_GLOBAL_PROPERTIES
   sudo mv $ALFRESCO_GLOBAL_PROPERTIES $CATALINA_HOME/shared/classes/
-
+  
   read -e -p "Install Share config file (recommended)${ques} [y/n] " -i "n" installshareconfig
   if [ "$installshareconfig" = "y" ]; then
     SHARE_CONFIG_CUSTOM=/tmp/alfrescoinstall/share-config-custom.xml
-    sudo curl -# -o $SHARE_CONFIG_CUSTOM $BASE_DOWNLOAD/tomcat/share-config-custom.xml
+    sudo axel -an 4 -o $SHARE_CONFIG_CUSTOM $BASE_DOWNLOAD/tomcat/share-config-custom.xml
     sed -i "s/@@ALFRESCO_SHARE_SERVER@@/$SHARE_HOSTNAME/g" $SHARE_CONFIG_CUSTOM
     sed -i "s/@@ALFRESCO_REPO_SERVER@@/$REPO_HOSTNAME/g" $SHARE_CONFIG_CUSTOM
     sudo mv $SHARE_CONFIG_CUSTOM $CATALINA_HOME/shared/classes/alfresco/web-extension/
   fi
-
+  
   echo
   read -e -p "Install Postgres JDBC Connector${ques} [y/n] " -i "n" installpg
   if [ "$installpg" = "y" ]; then
-	curl -# -O $JDBCPOSTGRESURL/$JDBCPOSTGRES
-	sudo mv $JDBCPOSTGRES $CATALINA_HOME/lib
+    axel -an 4 -o $JDBCPOSTGRESURL/$JDBCPOSTGRES
+    sudo mv $JDBCPOSTGRES $CATALINA_HOME/lib
   fi
   echo
   read -e -p "Install Mysql JDBC Connector${ques} [y/n] " -i "n" installmy
   if [ "$installmy" = "y" ]; then
     cd /tmp/alfrescoinstall
-	curl -# -L -O $JDBCMYSQLURL/$JDBCMYSQL
-	tar xf $JDBCMYSQL
-	cd "$(find . -type d -name "mysql-connector*")"
-	sudo mv mysql-connector*.jar $CATALINA_HOME/lib
+    wget --content-disposition $JDBCMYSQLURL/$JDBCMYSQL
+    tar xf $JDBCMYSQL
+    cd "$(find . -type d -name "mysql-connector*")"
+    sudo mv mysql-connector*.jar $CATALINA_HOME/lib
   fi
   sudo chown -R $ALF_USER:$ALF_GROUP $ALF_HOME
   echo
@@ -274,30 +274,30 @@ read -e -p "Install nginx${ques} [y/n] " -i "n" installnginx
 if [ "$installnginx" = "y" ]; then
   echoblue "Installing nginx. Fetching packages..."
   echo
-sudo -s << EOF
+  sudo -s << EOF
   echo "deb http://nginx.org/packages/mainline/ubuntu $(lsb_release -cs) nginx" >> /etc/apt/sources.list
-  sudo curl -# -o /tmp/alfrescoinstall/nginx_signing.key http://nginx.org/keys/nginx_signing.key
+  sudo axel -an 4 -o /tmp/alfrescoinstall/nginx_signing.key http://nginx.org/keys/nginx_signing.key
   apt-key add /tmp/alfrescoinstall/nginx_signing.key
   #echo "deb http://ppa.launchpad.net/nginx/stable/ubuntu $(lsb_release -cs) main" >> /etc/apt/sources.list
   #apt-key adv --keyserver keyserver.ubuntu.com --recv-keys C300EE8C
   # Alternate with spdy support and more, change  apt install -> nginx-custom
   #echo "deb http://ppa.launchpad.net/brianmercer/nginx/ubuntu $(lsb_release -cs) main" >> /etc/apt/sources.list
   #apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 8D0DC64F
-EOF
+  EOF
   sudo apt-get $APTVERBOSITY update && sudo apt-get $APTVERBOSITY install nginx
   sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.backup
-  sudo curl -# -o /etc/nginx/nginx.conf $BASE_DOWNLOAD/nginx/nginx.conf
+  sudo axel -an 4 -o /etc/nginx/nginx.conf $BASE_DOWNLOAD/nginx/nginx.conf
   sudo mkdir -p /var/cache/nginx/alfresco
   sudo mkdir -p $ALF_HOME/www
   if [ ! -f "$ALF_HOME/www/maintenance.html" ]; then
     echo "Downloading maintenance html page..."
-    sudo curl -# -o $ALF_HOME/www/maintenance.html $BASE_DOWNLOAD/nginx/maintenance.html
+    sudo axel -an 4 -o $ALF_HOME/www/maintenance.html $BASE_DOWNLOAD/nginx/maintenance.html
   fi
   sudo chown -R www-data:root /var/cache/nginx/alfresco
   sudo chown -R www-data:root $ALF_HOME/www
   ## Reload config file
   sudo service nginx reload
-
+  
   echo
   echogreen "Finished installing nginx"
   echo
@@ -339,9 +339,9 @@ echo "this install."
 echoblue "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 read -e -p "Install LibreOffice${ques} [y/n] " -i "n" installibreoffice
 if [ "$installibreoffice" = "y" ]; then
-
+  
   cd /tmp/alfrescoinstall
-  curl -# -L -O $LIBREOFFICE
+  wget --content-disposition $LIBREOFFICE
   tar xf LibreOffice*.tar.gz
   cd "$(find . -type d -name "LibreOffice*")"
   cd DEBS
@@ -370,7 +370,7 @@ echo "If you prefer some other way of installing ImageMagick, skip this step."
 echoblue "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 read -e -p "Install ImageMagick${ques} [y/n] " -i "n" installimagemagick
 if [ "$installimagemagick" = "y" ]; then
-
+  
   echoblue "Installing ImageMagick. Fetching packages..."
   sudo apt-get $APTVERBOSITY install imagemagick ghostscript libgs-dev libjpeg62 libpng3
   echo
@@ -401,7 +401,7 @@ if [ "$installswftools" = "y" ]; then
   sudo apt-get $APTVERBOSITY install make build-essential ccache g++ libgif-dev libjpeg62-dev libfreetype6-dev libpng12-dev libt1-dev
   cd /tmp/alfrescoinstall
   echo "Downloading swftools..."
-  curl -# -O $SWFTOOLS
+  axel -an 4 -o $SWFTOOLS
   tar xf swftools*.tar.gz
   cd "$(find . -type d -name "swftools*")"
   ./configure
@@ -420,74 +420,74 @@ echo
 echoblue "Adding basic support files. Always installed if not present."
 echo
 # Always add the addons dir and scripts
-  sudo mkdir -p $ALF_HOME/addons/war
-  sudo mkdir -p $ALF_HOME/addons/share
-  sudo mkdir -p $ALF_HOME/addons/alfresco
-  if [ ! -f "$ALF_HOME/addons/apply.sh" ]; then
-    echo "Downloading apply.sh script..."
-    sudo curl -# -o $ALF_HOME/addons/apply.sh $BASE_DOWNLOAD/scripts/apply.sh
-    sudo chmod u+x $ALF_HOME/addons/apply.sh
-  fi
-  if [ ! -f "$ALF_HOME/addons/alfresco-mmt.jar" ]; then
-    sudo curl -# -o $ALF_HOME/addons/alfresco-mmt.jar $BASE_DOWNLOAD/scripts/alfresco-mmt.jar
-  fi
+sudo mkdir -p $ALF_HOME/addons/war
+sudo mkdir -p $ALF_HOME/addons/share
+sudo mkdir -p $ALF_HOME/addons/alfresco
+if [ ! -f "$ALF_HOME/addons/apply.sh" ]; then
+  echo "Downloading apply.sh script..."
+  sudo axel -an 4 -o $ALF_HOME/addons/apply.sh $BASE_DOWNLOAD/scripts/apply.sh
+  sudo chmod u+x $ALF_HOME/addons/apply.sh
+fi
+if [ ! -f "$ALF_HOME/addons/alfresco-mmt.jar" ]; then
+  sudo axel -an 4 -o $ALF_HOME/addons/alfresco-mmt.jar $BASE_DOWNLOAD/scripts/alfresco-mmt.jar
+fi
 
-  sudo mkdir -p $ALF_HOME/scripts
-  if [ ! -f "$ALF_HOME/scripts/mariadb.sh" ]; then
-    echo "Downloading mariadb.sh install and setup script..."
-    sudo curl -# -o $ALF_HOME/scripts/mariadb.sh $BASE_DOWNLOAD/scripts/mariadb.sh
-  fi
-  if [ ! -f "$ALF_HOME/scripts/postgresql.sh" ]; then
-    echo "Downloading postgresql.sh install and setup script..."
-    sudo curl -# -o $ALF_HOME/scripts/postgresql.sh $BASE_DOWNLOAD/scripts/postgresql.sh
-  fi
+sudo mkdir -p $ALF_HOME/scripts
+if [ ! -f "$ALF_HOME/scripts/mariadb.sh" ]; then
+  echo "Downloading mariadb.sh install and setup script..."
+  sudo axel -an 4 -o $ALF_HOME/scripts/mariadb.sh $BASE_DOWNLOAD/scripts/mariadb.sh
+fi
+if [ ! -f "$ALF_HOME/scripts/postgresql.sh" ]; then
+  echo "Downloading postgresql.sh install and setup script..."
+  sudo axel -an 4 -o $ALF_HOME/scripts/postgresql.sh $BASE_DOWNLOAD/scripts/postgresql.sh
+fi
 
-  if [ ! -f "$ALF_HOME/scripts/mysql.sh" ]; then
-    echo "Downloading mysql.sh install and setup script..."
-    sudo curl -# -o $ALF_HOME/scripts/mysql.sh $BASE_DOWNLOAD/scripts/mysql.sh
-  fi
+if [ ! -f "$ALF_HOME/scripts/mysql.sh" ]; then
+  echo "Downloading mysql.sh install and setup script..."
+  sudo axel -an 4 -o $ALF_HOME/scripts/mysql.sh $BASE_DOWNLOAD/scripts/mysql.sh
+fi
 
-  if [ ! -f "$ALF_HOME/scripts/limitconvert.sh" ]; then
-    echo "Downloading limitconvert.sh script..."
-    sudo curl -# -o $ALF_HOME/scripts/limitconvert.sh $BASE_DOWNLOAD/scripts/limitconvert.sh
-  fi
-  if [ ! -f "$ALF_HOME/scripts/createssl.sh" ]; then
-    echo "Downloading createssl.sh script..."
-    sudo curl -# -o $ALF_HOME/scripts/createssl.sh $BASE_DOWNLOAD/scripts/createssl.sh
-  fi
-  if [ ! -f "$ALF_HOME/scripts/libreoffice.sh" ]; then
-    echo "Downloading libreoffice.sh script..."
-    sudo curl -# -o $ALF_HOME/scripts/libreoffice.sh $BASE_DOWNLOAD/scripts/libreoffice.sh
-    sudo sed -i "s/@@LOCALESUPPORT@@/$LOCALESUPPORT/g" $ALF_HOME/scripts/libreoffice.sh
-  fi
-  if [ ! -f "$ALF_HOME/scripts/iptables.sh" ]; then
-    echo "Downloading iptables.sh script..."
-    sudo curl -# -o $ALF_HOME/scripts/iptables.sh $BASE_DOWNLOAD/scripts/iptables.sh
-  fi
-  if [ ! -f "$ALF_HOME/scripts/alfresco-iptables.conf" ]; then
-    echo "Downloading alfresco-iptables.conf upstart script..."
-    sudo curl -# -o $ALF_HOME/scripts/alfresco-iptables.conf $BASE_DOWNLOAD/scripts/alfresco-iptables.conf
-  fi
-  if [ ! -f "$ALF_HOME/scripts/ams.sh" ]; then
-    echo "Downloading maintenance shutdown script..."
-    sudo curl -# -o $ALF_HOME/scripts/ams.sh $BASE_DOWNLOAD/scripts/ams.sh
-  fi
-  sudo chmod u+x $ALF_HOME/scripts/*.sh
+if [ ! -f "$ALF_HOME/scripts/limitconvert.sh" ]; then
+  echo "Downloading limitconvert.sh script..."
+  sudo axel -an 4 -o $ALF_HOME/scripts/limitconvert.sh $BASE_DOWNLOAD/scripts/limitconvert.sh
+fi
+if [ ! -f "$ALF_HOME/scripts/createssl.sh" ]; then
+  echo "Downloading createssl.sh script..."
+  sudo axel -an 4 -o $ALF_HOME/scripts/createssl.sh $BASE_DOWNLOAD/scripts/createssl.sh
+fi
+if [ ! -f "$ALF_HOME/scripts/libreoffice.sh" ]; then
+  echo "Downloading libreoffice.sh script..."
+  sudo axel -an 4 -o $ALF_HOME/scripts/libreoffice.sh $BASE_DOWNLOAD/scripts/libreoffice.sh
+  sudo sed -i "s/@@LOCALESUPPORT@@/$LOCALESUPPORT/g" $ALF_HOME/scripts/libreoffice.sh
+fi
+if [ ! -f "$ALF_HOME/scripts/iptables.sh" ]; then
+  echo "Downloading iptables.sh script..."
+  sudo axel -an 4 -o $ALF_HOME/scripts/iptables.sh $BASE_DOWNLOAD/scripts/iptables.sh
+fi
+if [ ! -f "$ALF_HOME/scripts/alfresco-iptables.conf" ]; then
+  echo "Downloading alfresco-iptables.conf upstart script..."
+  sudo axel -an 4 -o $ALF_HOME/scripts/alfresco-iptables.conf $BASE_DOWNLOAD/scripts/alfresco-iptables.conf
+fi
+if [ ! -f "$ALF_HOME/scripts/ams.sh" ]; then
+  echo "Downloading maintenance shutdown script..."
+  sudo axel -an 4 -o $ALF_HOME/scripts/ams.sh $BASE_DOWNLOAD/scripts/ams.sh
+fi
+sudo chmod u+x $ALF_HOME/scripts/*.sh
 
-  # Keystore
-  sudo mkdir -p $ALF_DATA_HOME/keystore
-  # Only check for precesence of one file, assume all the rest exists as well if so.
-  if [ ! -f " $ALF_DATA_HOME/keystore/ssl.keystore" ]; then
-    echo "Downloading keystore files..."
-    sudo curl -# -o $ALF_DATA_HOME/keystore/browser.p12 $KEYSTOREBASE/browser.p12
-    sudo curl -# -o $ALF_DATA_HOME/keystore/generate_keystores.sh $KEYSTOREBASE/generate_keystores.sh
-    sudo curl -# -o $ALF_DATA_HOME/keystore/keystore $KEYSTOREBASE/keystore
-    sudo curl -# -o $ALF_DATA_HOME/keystore/keystore-passwords.properties $KEYSTOREBASE/keystore-passwords.properties
-    sudo curl -# -o $ALF_DATA_HOME/keystore/ssl-keystore-passwords.properties $KEYSTOREBASE/ssl-keystore-passwords.properties
-    sudo curl -# -o $ALF_DATA_HOME/keystore/ssl-truststore-passwords.properties $KEYSTOREBASE/ssl-truststore-passwords.properties
-    sudo curl -# -o $ALF_DATA_HOME/keystore/ssl.keystore $KEYSTOREBASE/ssl.keystore
-    sudo curl -# -o $ALF_DATA_HOME/keystore/ssl.truststore $KEYSTOREBASE/ssl.truststore
-  fi
+# Keystore
+sudo mkdir -p $ALF_DATA_HOME/keystore
+# Only check for precesence of one file, assume all the rest exists as well if so.
+if [ ! -f " $ALF_DATA_HOME/keystore/ssl.keystore" ]; then
+  echo "Downloading keystore files..."
+  sudo axel -an 4 -o $ALF_DATA_HOME/keystore/browser.p12 $KEYSTOREBASE/browser.p12
+  sudo axel -an 4 -o $ALF_DATA_HOME/keystore/generate_keystores.sh $KEYSTOREBASE/generate_keystores.sh
+  sudo axel -an 4 -o $ALF_DATA_HOME/keystore/keystore $KEYSTOREBASE/keystore
+  sudo axel -an 4 -o $ALF_DATA_HOME/keystore/keystore-passwords.properties $KEYSTOREBASE/keystore-passwords.properties
+  sudo axel -an 4 -o $ALF_DATA_HOME/keystore/ssl-keystore-passwords.properties $KEYSTOREBASE/ssl-keystore-passwords.properties
+  sudo axel -an 4 -o $ALF_DATA_HOME/keystore/ssl-truststore-passwords.properties $KEYSTOREBASE/ssl-truststore-passwords.properties
+  sudo axel -an 4 -o $ALF_DATA_HOME/keystore/ssl.keystore $KEYSTOREBASE/ssl.keystore
+  sudo axel -an 4 -o $ALF_DATA_HOME/keystore/ssl.truststore $KEYSTOREBASE/ssl.truststore
+fi
 
 echo
 echoblue "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
@@ -499,28 +499,28 @@ echo "apply.sh script to add them to tomcat/webapps. Se this script for more inf
 echoblue "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 read -e -p "Add Alfresco war files${ques} [y/n] " -i "n" installwar
 if [ "$installwar" = "y" ]; then
-
+  
   echogreen "Downloading alfresco and share war files..."
-  sudo curl -# -o $ALF_HOME/addons/war/alfresco.war $ALFREPOWAR
-  sudo curl -# -o $ALF_HOME/addons/war/share.war $ALFSHAREWAR
-
+  sudo axel -an 4 -o $ALF_HOME/addons/war/alfresco.war $ALFREPOWAR
+  sudo axel -an 4 -o $ALF_HOME/addons/war/share.war $ALFSHAREWAR
+  
   cd /tmp/alfrescoinstall
   read -e -p "Add Google docs integration${ques} [y/n] " -i "n" installgoogledocs
   if [ "$installgoogledocs" = "y" ]; then
-  	echo "Downloading Google docs addon..."
-    curl -# -O $GOOGLEDOCSREPO
+    echo "Downloading Google docs addon..."
+    axel -an 4 -o $GOOGLEDOCSREPO
     sudo mv alfresco-googledocs-repo*.amp $ALF_HOME/addons/alfresco/
-    curl -# -O $GOOGLEDOCSSHARE
+    axel -an 4 -o $GOOGLEDOCSSHARE
     sudo mv alfresco-googledocs-share* $ALF_HOME/addons/share/
   fi
-
+  
   read -e -p "Add Sharepoint plugin${ques} [y/n] " -i "n" installspp
   if [ "$installspp" = "y" ]; then
     echo "Downloading Sharepoint addon..."
-    curl -# -O $SPP
+    axel -an 4 -o $SPP
     sudo mv alfresco-spp*.amp $ALF_HOME/addons/alfresco/
   fi
-
+  
   # Check if Java is installed before trying to apply
   if type -p java; then
     _java=java
@@ -534,7 +534,7 @@ if [ "$installwar" = "y" ]; then
   if [[ "$_java" ]]; then
     sudo $ALF_HOME/addons/apply.sh all
   fi
-
+  
   echo
   echogreen "Finished adding Alfresco war files"
   echo
@@ -552,50 +552,50 @@ echo "install the Solr4 indexing engine on the same server as your repository se
 echoblue "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 read -e -p "Install Solr4 indexing engine${ques} [y/n] " -i "n" installsolr
 if [ "$installsolr" = "y" ]; then
-
+  
   # Make sure we have unzip available
   sudo apt-get $APTVERBOSITY install unzip
-
+  
   # Check if we have an old install
   if [ -d "$ALF_HOME/solr4" ]; then
-     sudo mv $ALF_HOME/solr4 $ALF_HOME/solr4_BACKUP_`eval date +%Y%m%d%H%M`
+    sudo mv $ALF_HOME/solr4 $ALF_HOME/solr4_BACKUP_`eval date +%Y%m%d%H%M`
   fi
   sudo mkdir -p $ALF_HOME/solr4
   cd $ALF_HOME/solr4
-
+  
   echogreen "Downloading solr4.war file..."
-  sudo curl -# -o $CATALINA_HOME/webapps/solr4.war $SOLR4_WAR_DOWNLOAD
-
+  sudo axel -an 4 -o $CATALINA_HOME/webapps/solr4.war $SOLR4_WAR_DOWNLOAD
+  
   echogreen "Downloading config file..."
-  sudo curl -# -o $ALF_HOME/solr4/solrconfig.zip $SOLR4_CONFIG_DOWNLOAD
+  sudo axel -an 4 -o $ALF_HOME/solr4/solrconfig.zip $SOLR4_CONFIG_DOWNLOAD
   echogreen "Expanding config file..."
   sudo unzip -q solrconfig.zip
   sudo rm solrconfig.zip
-
+  
   echogreen "Configuring..."
-
+  
   # Make sure dir exist
   sudo mkdir -p $CATALINA_HOME/conf/Catalina/localhost
   sudo mkdir -p $ALF_DATA_HOME/solr4
   mkdir -p $TMP_INSTALL
-
+  
   # Remove old config if exists
   if [ -f "$CATALINA_HOME/conf/Catalina/localhost/solr.xml" ]; then
-     sudo rm $CATALINA_HOME/conf/Catalina/localhost/solr.xml
+    sudo rm $CATALINA_HOME/conf/Catalina/localhost/solr.xml
   fi
-
+  
   # Set the solr data path
   SOLRDATAPATH="$ALF_DATA_HOME/solr4"
   # Escape for sed
   SOLRDATAPATH="${SOLRDATAPATH//\//\\/}"
-
+  
   sudo mv $ALF_HOME/solr4/workspace-SpacesStore/conf/solrcore.properties $ALF_HOME/solr4/workspace-SpacesStore/conf/solrcore.properties.orig
   sudo mv $ALF_HOME/solr4/archive-SpacesStore/conf/solrcore.properties $ALF_HOME/solr4/archive-SpacesStore/conf/solrcore.properties.orig
   sed "s/@@ALFRESCO_SOLR4_DATA_DIR@@/$SOLRDATAPATH/g" $ALF_HOME/solr4/workspace-SpacesStore/conf/solrcore.properties.orig >  $TMP_INSTALL/solrcore.properties
   sudo mv  $TMP_INSTALL/solrcore.properties $ALF_HOME/solr4/workspace-SpacesStore/conf/solrcore.properties
   sed "s/@@ALFRESCO_SOLR4_DATA_DIR@@/$SOLRDATAPATH/g" $ALF_HOME/solr4/archive-SpacesStore/conf/solrcore.properties.orig >  $TMP_INSTALL/solrcore.properties
   sudo mv  $TMP_INSTALL/solrcore.properties $ALF_HOME/solr4/archive-SpacesStore/conf/solrcore.properties
-
+  
   echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>" > $TMP_INSTALL/solr4.xml
   echo "<Context debug=\"0\" crossContext=\"true\">" >> $TMP_INSTALL/solr4.xml
   echo "  <Environment name=\"solr/home\" type=\"java.lang.String\" value=\"$ALF_HOME/solr4\" override=\"true\"/>" >> $TMP_INSTALL/solr4.xml
@@ -603,12 +603,12 @@ if [ "$installsolr" = "y" ]; then
   echo "  <Environment name=\"solr/content/dir\" type=\"java.lang.String\" value=\"$ALF_DATA_HOME/solr4\" override=\"true\"/>" >> $TMP_INSTALL/solr4.xml
   echo "</Context>" >> $TMP_INSTALL/solr4.xml
   sudo mv $TMP_INSTALL/solr4.xml $CATALINA_HOME/conf/Catalina/localhost/solr4.xml
-
+  
   echogreen "Setting permissions..."
   sudo chown -R $ALF_USER:$ALF_GROUP $CATALINA_HOME/webapps
   sudo chown -R $ALF_USER:$ALF_GROUP $ALF_DATA_HOME/solr4
   sudo chown -R $ALF_USER:$ALF_GROUP $ALF_HOME/solr4
-
+  
   echo
   echogreen "Finished installing Solr4 engine."
   echored "Verify your setting in alfresco-global.properties."
@@ -632,64 +632,64 @@ echoblue "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 read -p "Install B.A.R.T${ques} [y/n] " -i "n" installbart
 
 if [ "$installbart" = "y" ]; then
- echogreen "Installing B.A.R.T"
-
-
- sudo mkdir -p $ALF_HOME/scripts/bart
- sudo mkdir -p $ALF_HOME/logs/bart
- sudo curl -# -o $TMP_INSTALL/$BART_PROPERTIES $BASE_BART_DOWNLOAD$BART_PROPERTIES
- sudo curl -# -o $TMP_INSTALL/$BART_EXECUTE $BASE_BART_DOWNLOAD$BART_EXECUTE
-
- # Update bart settings
- ALFHOMEESCAPED="${ALF_HOME//\//\\/}"
- BARTLOGPATH="$ALF_HOME/logs/bart"
- ALFBRTPATH="$ALF_HOME/scripts/bart"
- INDEXESDIR="\$\{ALF_DIRROOT\}/solr4"
- # Escape for sed
- BARTLOGPATH="${BARTLOGPATH//\//\\/}"
- ALFBRTPATH="${ALFBRTPATH//\//\\/}"
- INDEXESDIR="${INDEXESDIR//\//\\/}"
-
- sed -i "s/ALF_INSTALLATION_DIR\=.*/ALF_INSTALLATION_DIR\=$ALFHOMEESCAPED/g" $TMP_INSTALL/$BART_PROPERTIES
- sed -i "s/ALFBRT_LOG_DIR\=.*/ALFBRT_LOG_DIR\=$BARTLOGPATH/g" $TMP_INSTALL/$BART_PROPERTIES
- sed -i "s/INDEXES_DIR\=.*/INDEXES_DIR\=$INDEXESDIR/g" $TMP_INSTALL/$BART_PROPERTIES
- sudo cp $TMP_INSTALL/$BART_PROPERTIES $ALF_HOME/scripts/bart/$BART_PROPERTIES
- sed -i "s/ALFBRT_PATH\=.*/ALFBRT_PATH\=$ALFBRTPATH/g" $TMP_INSTALL/$BART_EXECUTE
- sudo cp $TMP_INSTALL/$BART_EXECUTE $ALF_HOME/scripts/bart/$BART_EXECUTE
-
- sudo chmod 700 $ALF_HOME/scripts/bart/$BART_PROPERTIES
- sudo chmod 774 $ALF_HOME/scripts/bart/$BART_EXECUTE
-
- # Install dependency
- sudo apt-get $APTVERBOSITY install duplicity;
-
- # Add to cron tab
- tmpfile=/tmp/crontab.tmp
-
- # read crontab and remove custom entries (usually not there since after a reboot
- # QNAP restores to default crontab: http://wiki.qnap.com/wiki/Add_items_to_crontab#Method_2:_autorun.sh
- sudo -u $ALF_USER crontab -l | grep -vi "alfresco-bart.sh" > $tmpfile
-
- # add custom entries to crontab
- echo "0 5 * * * $ALF_HOME/scripts/bart/$BART_EXECUTE backup" >> $tmpfile
-
- #load crontab from file
- sudo -u $ALF_USER crontab $tmpfile
-
- # remove temporary file
- rm $tmpfile
-
- # restart crontab
- sudo service cron restart
-
- echogreen "B.A.R.T Cron is installed to run in 5AM every day as the $ALF_USER user"
-
+  echogreen "Installing B.A.R.T"
+  
+  
+  sudo mkdir -p $ALF_HOME/scripts/bart
+  sudo mkdir -p $ALF_HOME/logs/bart
+  sudo axel -an 4 -o $TMP_INSTALL/$BART_PROPERTIES $BASE_BART_DOWNLOAD$BART_PROPERTIES
+  sudo axel -an 4 -o $TMP_INSTALL/$BART_EXECUTE $BASE_BART_DOWNLOAD$BART_EXECUTE
+  
+  # Update bart settings
+  ALFHOMEESCAPED="${ALF_HOME//\//\\/}"
+  BARTLOGPATH="$ALF_HOME/logs/bart"
+  ALFBRTPATH="$ALF_HOME/scripts/bart"
+  INDEXESDIR="\$\{ALF_DIRROOT\}/solr4"
+  # Escape for sed
+  BARTLOGPATH="${BARTLOGPATH//\//\\/}"
+  ALFBRTPATH="${ALFBRTPATH//\//\\/}"
+  INDEXESDIR="${INDEXESDIR//\//\\/}"
+  
+  sed -i "s/ALF_INSTALLATION_DIR\=.*/ALF_INSTALLATION_DIR\=$ALFHOMEESCAPED/g" $TMP_INSTALL/$BART_PROPERTIES
+  sed -i "s/ALFBRT_LOG_DIR\=.*/ALFBRT_LOG_DIR\=$BARTLOGPATH/g" $TMP_INSTALL/$BART_PROPERTIES
+  sed -i "s/INDEXES_DIR\=.*/INDEXES_DIR\=$INDEXESDIR/g" $TMP_INSTALL/$BART_PROPERTIES
+  sudo cp $TMP_INSTALL/$BART_PROPERTIES $ALF_HOME/scripts/bart/$BART_PROPERTIES
+  sed -i "s/ALFBRT_PATH\=.*/ALFBRT_PATH\=$ALFBRTPATH/g" $TMP_INSTALL/$BART_EXECUTE
+  sudo cp $TMP_INSTALL/$BART_EXECUTE $ALF_HOME/scripts/bart/$BART_EXECUTE
+  
+  sudo chmod 700 $ALF_HOME/scripts/bart/$BART_PROPERTIES
+  sudo chmod 774 $ALF_HOME/scripts/bart/$BART_EXECUTE
+  
+  # Install dependency
+  sudo apt-get $APTVERBOSITY install duplicity;
+  
+  # Add to cron tab
+  tmpfile=/tmp/crontab.tmp
+  
+  # read crontab and remove custom entries (usually not there since after a reboot
+  # QNAP restores to default crontab: http://wiki.qnap.com/wiki/Add_items_to_crontab#Method_2:_autorun.sh
+  sudo -u $ALF_USER crontab -l | grep -vi "alfresco-bart.sh" > $tmpfile
+  
+  # add custom entries to crontab
+  echo "0 5 * * * $ALF_HOME/scripts/bart/$BART_EXECUTE backup" >> $tmpfile
+  
+  #load crontab from file
+  sudo -u $ALF_USER crontab $tmpfile
+  
+  # remove temporary file
+  rm $tmpfile
+  
+  # restart crontab
+  sudo service cron restart
+  
+  echogreen "B.A.R.T Cron is installed to run in 5AM every day as the $ALF_USER user"
+  
 fi
 
 # Finally, set the permissions
 sudo chown -R $ALF_USER:$ALF_GROUP $ALF_HOME
 if [ -d "$ALF_HOME/www" ]; then
-   sudo chown -R www-data:root $ALF_HOME/www
+  sudo chown -R www-data:root $ALF_HOME/www
 fi
 
 echo
